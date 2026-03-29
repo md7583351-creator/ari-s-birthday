@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aria's Private Diary 🎂</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Indie+Flower&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --aria-pink: #ff85a2;
+            --book-red: #d63384;
+            --paper: #ffffff;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background: #ffeef2;
+            font-family: 'Indie Flower', cursive;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 1. TEXT RAIN BACKGROUND */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.4;
+        }
+
+        /* 2. THE DIARY CONTAINER (3D Book) */
+        .diary-wrapper {
+            position: relative;
+            z-index: 100;
+            width: 350px;
+            height: 450px;
+            perspective: 1500px;
+        }
+
+        .book {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            transform-origin: left;
+            transform-style: preserve-3d;
+            transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        /* Front Cover */
+        .front {
+            background: var(--book-red);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px 15px 15px 5px;
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.2), 5px 5px 20px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .front h1 { font-family: 'Dancing Script'; font-size: 2.5rem; margin-top: 10px; }
+        .front .click-hint { font-size: 0.9rem; margin-top: 50px; animation: pulse 2s infinite; }
+
+        /* Inside Pages */
+        .inside {
+            background: var(--paper);
+            padding: 30px;
+            box-sizing: border-box;
+            border-radius: 0 10px 10px 0;
+            box-shadow: inset 3px 0 5px rgba(0,0,0,0.1);
+            backface-visibility: hidden;
+            border-left: 2px solid #eee;
+        }
+
+        .inside h2 { font-family: 'Dancing Script'; color: var(--book-red); border-bottom: 2px dashed #ffc0cb; }
+        .inside p { font-size: 1.2rem; line-height: 1.6; color: #333; }
+
+        /* Panda Holder on each page */
+        .panda-head { width: 60px; margin-bottom: 10px; }
+
+        /* Flipped state */
+        .page.flipped { transform: rotateY(-180deg); }
+        .page.flipped { z-index: 1; }
+
+        /* INTRO OVERLAY */
+        #wish-sequence {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            z-index: 2000;
+            display: none;
+            justify-content: center; align-items: center;
+        }
+
+        .wish-text {
+            font-family: 'Dancing Script', cursive; font-size: 2.2rem;
+            color: var(--aria-pink); opacity: 0; transition: 0.8s; position: absolute;
+        }
+
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #fff; z-index: 3000; display: flex; 
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        .btn-main {
+            background: var(--aria-pink); color: white; border: none;
+            padding: 15px 40px; border-radius: 50px; font-size: 1.3rem; cursor: pointer;
+        }
+
+        @keyframes pulse { 0%, 100% {opacity: 1;} 50% {opacity: 0.3;} }
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <div id="start-overlay">
+        <div style="font-size: 4rem;">🎁</div>
+        <button class="btn-main" onclick="runSequence()">Click for Aria</button>
+    </div>
+
+    <div id="wish-sequence">
+        <div class="wish-text" id="w1">Finally, it's time...</div>
+        <div class="wish-text" id="w2">It's Aria's Birthday! HAPPY BIRTHDAY MY DEAR BLUE💙 🎂</div>
+        <div class="wish-text" id="w3">I have a little secret for you...</div>
+        <div class="wish-text" id="w4">Open the diary to see! 🐼</div>
+    </div>
+
+    <div class="diary-wrapper" id="diary-ui" style="display: none;">
+        <div class="book">
+            
+            <div class="page" id="p4">
+                <div class="inside">
+                    <h2>Page 4:My wishes🎀 </h2>
+                    <p>>For vour birthdav, I wish vou a vear of zero stress and 100% happiness. I hope you reach every goal you've set, because I know how hard you work for vour dreams. You deserve the best. Aria. I can't wait to see what this next vear brings for you. I know you 're going to achieve big things. I'1l be right here cheering vou on!</p>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button onclick="celebrate()" style="background:var(--aria-pink); color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">Surprise! 🎉</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="p3" onclick="flip(this)">
+                <div class="inside">
+                    <h2>Page 3:Our memories🧸 </h2>
+                    <p>Remember when we first met? And honestly, I can’t forget those memories.. they just stick with me. The laughs, the conversations, the little moments that didn’t seem big at the time but mean a lot now. U have a way of making every moment feel like a scene from a fantasy world. I treasure every memory we share</p>
+                    <p style="font-size: 0.8rem; color: #aaa; margin-top: 40px;">(Click page to turn)</p>
+                </div>
+            </div>
+
+            <div class="page" id="p2" onclick="flip(this)">
+                <div class="inside">
+                    <h2>Page 2: Arii'special day🐼 </h2>
+                    <p>Today is all about Ariii. I hope you get to spend it doing exactly what makes you happy. Whether it's relaxing or celebrating with friends, I hope it's perfect. I wish i can meet with you in this special day😔 but insha Allah i'll come to you soon</p>
+                </div>
+            </div>
+
+            <div class="page" id="p1" onclick="flip(this)">
+                <div class="inside">
+                    <h2>Page 1:The Surprise🥳 </h2>
+                    <p>Happy Birthday, Aria! I asked this little panda to help me show you something special today. I wanted to create something that shows how special ur to me. As u scrool through these pages, know that every word was written with u in my mind and a little piece of my gratitude for having you in my life.</p>
+                </div>
+            </div>
+
+            <div class="page" id="cover" onclick="flip(this)">
+                <div class="front">
+                    <div style="font-size: 4rem;">🐼</div>
+                    <h1>Aria's Diary</h1>
+                    <div class="click-hint">Click to Open 📖</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <audio id="music" loop>
+        <source src="https://www.mboxdrive.com/Happy%20Birthday%20Instrumental.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const rainText = "HAPPY BIRTHDAY ARIA ";
+        const drops = Array(Math.floor(canvas.width/20)).fill(1);
+
+        function drawRain() {
+            ctx.fillStyle = "rgba(255, 238, 242, 0.2)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff85a2";
+            ctx.font = "bold 18px Arial";
+            drops.forEach((y, i) => {
+                const char = rainText[Math.floor(Math.random()*rainText.length)];
+                ctx.fillText(char, i*20, y*20);
+                if (y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+
+        function runSequence() {
+            document.getElementById('music').play();
+            document.getElementById('start-overlay').style.display = 'none';
+            const seq = document.getElementById('wish-sequence');
+            seq.style.display = 'flex';
+            
+            const wishes = ["w1", "w2", "w3", "w4"];
+            let i = 0;
+            const timer = setInterval(() => {
+                if (i > 0) document.getElementById(wishes[i-1]).style.opacity = 0;
+                if (i < wishes.length) {
+                    document.getElementById(wishes[i]).style.opacity = 1;
+                    i++;
+                } else {
+                    clearInterval(timer);
+                    setTimeout(() => {
+                        seq.style.display = 'none';
+                        document.getElementById('diary-ui').style.display = 'block';
+                        setInterval(drawRain, 50);
+                    }, 1000);
+                }
+            }, 2000);
+        }
+
+        function flip(el) {
+            el.classList.toggle('flipped');
+        }
+
+        function celebrate() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#ff85a2', '#ffffff'] });
+        }
+    </script>
+</body>
+</html>
